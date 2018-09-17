@@ -45,3 +45,12 @@ tmtagsHistory
 *.sublime-project
 *.sublime-workspace
 .bundle
+
+# Project-specific #
+####################
+data
+results
+estimators 
+*.docx 
+.cache 
+.keras
