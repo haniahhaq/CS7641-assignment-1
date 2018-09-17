@@ -1,6 +1,7 @@
 from datetime import datetime
 import imp
 import os
+from pathlib import Path
 
 import pandas as pd
 from pytz import timezone
@@ -14,7 +15,8 @@ def save_search_result(search_obj, dataset, estimator_type, results_dir='./resul
     tz = timezone('US/Eastern')
     date = datetime.now(tz).isoformat(timespec='minutes', sep='_')
     filename = '%.3f_%s_%s_%s' % (score, dataset, estimator_type, date)
-    joblib.dump(results, results_dir + filename + '.pkl')
+    path = Path(results_dir + filename + '.pkl')
+    joblib.dump(results, path)
 
 
 def load_best_result(dataset, estimator_type, results_dir='./results/'):
