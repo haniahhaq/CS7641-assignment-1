@@ -49,8 +49,6 @@ tmtagsHistory
 # Project-specific #
 ####################
 data
-results
-estimators 
 *.docx 
 .cache 
 .keras
