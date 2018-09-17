@@ -13,9 +13,8 @@ def save_search_result(search_obj, dataset, estimator_type, results_dir='./resul
     results = search_obj.cv_results_
     score = search_obj.best_score_
     tz = timezone('US/Eastern')
-    date = datetime.now(tz).isoformat(timespec='minutes', sep='_')
+    date = datetime.now(tz).isoformat(timespec='minutes', sep='_').replace(':', '-')
     filename = '%.3f_%s_%s_%s' % (score, dataset, estimator_type, date)
-    filename.replace(':', '-') # For windows compatibility
     path = Path(results_dir + filename + '.pkl')
     joblib.dump(results, path)
 
