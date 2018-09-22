@@ -11,27 +11,39 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import learning_curve, validation_curve
 
 
-def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlabel=None, legend=True, linestyles=None, xticks=None, ylim=None):
+def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlabel=None, legend=True, linestyles=None, title=None, ylim=None, legend_kwargs={}, fig_kwargs={}, markersize=None):
     """Generic plot routine to plot multiple lines on same axes"""
 
+    fig, ax = plt.subplots(**fig_kwargs)
+
     if not linestyles:
-        linestyles = ['-'] * len(means)
+        if len(means) % 2 == 1:
+            # ODD sequence
+            linestyles = ['-'] * int(len(means))
+        else:
+            linestyles = ['-'] * int(len(means) / 2) + ['--'] * int(len(means) / 2)
+    if not markersize:
+        markersize = 5
+    if not series_labels:
+        series_labels = [''] * len(means)
 
     for ix, mean, std, label, ls in zip(range(len(means)), means, stds, series_labels, linestyles):
         color = 'C%s' % ix
-        plt.plot(xrange, mean, marker='o', markersize=5, label=label, color=color, linestyle=ls)
-        plt.fill_between(xrange, mean + std, mean - std, color=color, alpha=0.15, linestyle=ls)
+        plt.plot(xrange, mean, marker='o', markersize=markersize, label=label, color=color, linestyle=ls)
+        plt.fill_between(xrange, mean + std, mean - std, color=color, alpha=0.15)
 
     plt.grid()
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.ylim(ylim)
     if legend:
-        plt.legend(loc='lower right')
+        plt.legend(**legend_kwargs)
+    if title:
+        plt.title(title)
     plt.show()
 
 
-def gen_and_plot_validation_curve(estimator, X_train, y_train, param_name, param_range, ylim=None, **sk_kwargs):
+def gen_and_plot_validation_curve(estimator, X_train, y_train, param_name, param_range, ylim=None, title=None, **sk_kwargs):
     train_scores, test_scores = validation_curve(
                     estimator=estimator,
                     X=X_train,
@@ -46,12 +58,12 @@ def gen_and_plot_validation_curve(estimator, X_train, y_train, param_name, param
     test_mean = np.mean(test_scores, axis=1)
     test_std = np.std(test_scores, axis=1)
 
-    plot_validation_curve(train_mean, train_std, test_mean, test_std, param_name, param_range, ylim)
+    plot_validation_curve(train_mean, train_std, test_mean, test_std, param_name, param_range, ylim, title)
 
     return train_scores, test_scores, train_mean, train_std, test_mean, test_std
 
 
-def plot_validation_curve(train_mean, train_std, test_mean, test_std, param_name, param_range, ylim=None):
+def plot_validation_curve(train_mean, train_std, test_mean, test_std, param_name, param_range, ylim=None, title=None):
     if isinstance(param_range[0], (int,float)):
         x_range = param_range
         x_labels = param_range
@@ -79,10 +91,11 @@ def plot_validation_curve(train_mean, train_std, test_mean, test_std, param_name
     plt.xlabel('Parameter %s' % param_name)
     plt.ylabel('Accuracy')
     plt.ylim(ylim)
+    plt.title(title)
     plt.show()
 
 
-def gen_and_plot_learning_curve(estimator, X_train, y_train, train_sizes=np.linspace(0.1, 1.0, 10), ylim=None, **kwargs):
+def gen_and_plot_learning_curve(estimator, X_train, y_train, train_sizes=np.linspace(0.1, 1.0, 10), ylim=None, ylabel=None, title=None, **kwargs):
     """Plot a learning curve for given estimator"""
     train_sizes, train_scores, test_scores = learning_curve(
         estimator=estimator,
@@ -92,20 +105,22 @@ def gen_and_plot_learning_curve(estimator, X_train, y_train, train_sizes=np.lins
         **kwargs
     )
 
-    train_mean, train_std, test_mean, test_std = plot_learning_curve(train_sizes, train_scores, test_scores, ylim)
-
-    return train_sizes, train_scores, test_scores, train_mean, train_std, test_mean, test_std
-
-
-def plot_learning_curve(train_sizes, train_scores, test_scores, ylim=None):
     train_mean = np.mean(train_scores, axis=1)
     train_std = np.std(train_scores, axis=1)
     test_mean = np.mean(test_scores, axis=1)
     test_std = np.std(test_scores, axis=1)
 
+    plot_learning_curve(train_sizes, train_mean, train_std, test_mean, test_std, ylim, ylabel, title)
+
+    return train_sizes, train_mean, train_std, test_mean, test_std
+
+
+def plot_learning_curve(train_sizes, train_mean, train_std, test_mean, test_std, ylim=None, ylabel=None, title=None):
+
+
     plt.plot(train_sizes, train_mean,
              color='C0', marker='o',
-             markersize=5, label='training accuracy')
+             markersize=5, label='training')
 
     plt.fill_between(train_sizes,
                      train_mean + train_std,
@@ -115,7 +130,7 @@ def plot_learning_curve(train_sizes, train_scores, test_scores, ylim=None):
     plt.plot(train_sizes, test_mean,
              color='C1', linestyle='--',
              marker='s', markersize=5,
-             label='validation accuracy')
+             label='validation')
 
     plt.fill_between(train_sizes,
                      test_mean + test_std,
@@ -123,12 +138,14 @@ def plot_learning_curve(train_sizes, train_scores, test_scores, ylim=None):
                      alpha=0.15, color='C1')
     plt.grid()
     plt.xlabel('Number of training samples')
-    plt.ylabel('Accuracy')
+    if not ylabel:
+        plt.ylabel('Accuracy')
+    else:
+        plt.ylabel(ylabel)
     plt.legend(loc='lower right')
+    plt.title(title)
     plt.ylim(ylim)
     plt.show()
-
-    return train_mean, train_std, test_mean, test_std
 
 
 def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title='Confusion matrix', **kwargs):
