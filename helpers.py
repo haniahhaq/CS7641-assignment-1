@@ -1,11 +1,15 @@
+from collections import defaultdict
 from datetime import datetime
 import os
 from pathlib import Path
+from time import clock
 
 import numpy as np
 import pandas as pd
 from pytz import timezone
+from sklearn.base import clone
 from sklearn.externals import joblib
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, accuracy_score
 from sklearn.utils import compute_sample_weight
 
@@ -81,9 +85,34 @@ def scikit_cv_result_to_df(cv_res, drop_splits=True):
     return cv_res_df
 
 
-# This code copied from https://github.com/JonathanTay/CS-7641-assignment-1/blob/master/helpers.py
+# All code below copied from https://github.com/JonathanTay/CS-7641-assignment-1/blob/master/helpers.py
 def balanced_accuracy(truth,pred):
     wts = compute_sample_weight('balanced',truth)
     return accuracy_score(truth,pred,sample_weight=wts)
 
 balanced_accuracy_scorer = make_scorer(balanced_accuracy)
+
+
+# This code is modified so that this classifier is cloned before each fit, avoiding timing advantages
+def timing_curve(clf, X, Y, train_sizes=np.linspace(0.1, 0.9, 9)):
+    out = {
+        'train_size': [],
+        'fit_time': [],
+        'pred_time':  [],
+    }
+    for frac in train_sizes:
+        clf_clone = clone(clf)
+        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=frac, random_state=1)
+        out['train_size'].append(X_train.shape[0])
+        st = clock()
+        np.random.seed(55)
+        clf_clone.fit(X_train,y_train)
+        out['fit_time'].append(clock()-st)
+        st = clock()
+        clf_clone.predict(X_test)
+        out['pred_time'].append(clock()-st)
+    out_df = pd.DataFrame(out)
+    out_df['fit_time_per_samp'] = out_df['fit_time'] / out_df['train_size']
+    out_df['pred_time_per_samp'] = out_df['pred_time'] / out_df['train_size']
+    out_df = out_df.set_index('train_size')
+    return out_df
