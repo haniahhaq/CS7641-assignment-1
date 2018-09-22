@@ -12,25 +12,28 @@ def load_adult(preprocess=False):
     df = pd.read_csv(
         'data/adult.csv',
         names=[
-            "Age", "Workclass", "fnlwgt", "Education", "Education-Num", "Marital Status",
-            "Occupation", "Relationship", "Race", "Sex", "Capital Gain", "Capital Loss",
-            "Hours per week", "Country", "Target"],
+            "age", "workclass", "fnlwgt", "education", "education-num", "marital status",
+            "occupation", "relationship", "race", "sex", "capital gain", "capital loss",
+            "hours per week", "country", "target"],
         sep=r'\s*,\s*',
         engine='python',
         na_values="?")
-    if not preprocess:
-        return df
 
-    # Remove missing data
-    df = df.dropna()
+    if preprocess:
+        # Remove missing data
+        df = df.dropna()
 
-    # Perform one hot encoding
-    df = pd.get_dummies(df)
+        # Perform one hot encoding
+        df = pd.get_dummies(df)
 
-    # Want the target to be 0 or 1
-    df['target'] = df['Target_>50K']
-    del df["Target_<=50K"]
-    del df["Target_>50K"]
+        # Want the target to be 0 or 1
+        df['target'] = df['target_>50K']
+        del df["target_<=50K"]
+        del df["target_>50K"]
+
+
+    print('Dataset shape %s' % str(df.shape))
+    print('Value composition:\n%s' % (df['target'].value_counts() / df['target'].shape[0]))
 
     return df
 
@@ -53,6 +56,8 @@ def load_mnist(preprocess=False):
     filtered_df = raw_df[criterion]
     le = LabelEncoder()
     filtered_df['target'] = le.fit_transform(filtered_df['target'])
-    print(filtered_df['target'].value_counts())
+    print('Target column encoded with the following classes %s' % le.classes_)
+    print('Dataset shape %s' % str(filtered_df.shape))
+    print('Value composition:\n%s' % (filtered_df['target'].value_counts() / filtered_df['target'].shape[0]))
 
     return filtered_df
