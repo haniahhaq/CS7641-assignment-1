@@ -48,7 +48,6 @@ tmtagsHistory
 
 # Project-specific #
 ####################
-data
 *.docx 
 .cache 
 .keras
