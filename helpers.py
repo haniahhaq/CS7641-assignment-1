@@ -14,18 +14,18 @@ from sklearn.metrics import make_scorer, accuracy_score
 from sklearn.utils import compute_sample_weight
 
 
-def save_search_result(search_obj, dataset, estimator_type, results_dir='./results/'):
+def save_search_result(search_obj, dataset, estimator_type, results_dir='./results/', extras=''):
     """Saves a GridSearchCV or RandomizedSearchCV result to a file"""
     results = search_obj.cv_results_
     score = search_obj.best_score_
     tz = timezone('US/Eastern')
     date = datetime.now(tz).isoformat(timespec='minutes', sep='_').replace(':', '-')
-    filename = 'search_%s_%s_%.3f_%s' % (dataset, estimator_type, score, date)
+    filename = 'search_%s_%s_%.3f_%s_%s' % (dataset, estimator_type, score, date, extras)
     path = Path(results_dir + filename + '.pkl')
     joblib.dump(results, path)
 
 
-def save_learning_curve(dataset, learner_type, train_sizes, train_mean, train_std, test_mean, test_std, results_dir='./results/'):
+def save_learning_curve(dataset, learner_type, train_sizes, train_mean, train_std, test_mean, test_std, results_dir='./results/', extras=''):
     learning_result = {
         'train_sizes': train_sizes,
         'train_mean': train_mean,
@@ -36,7 +36,7 @@ def save_learning_curve(dataset, learner_type, train_sizes, train_mean, train_st
     score = np.max(learning_result['test_mean'])
     tz = timezone('US/Eastern')
     date = datetime.now(tz).isoformat(timespec='minutes', sep='_').replace(':', '-')
-    filename = 'learning_%s_%s_%.3f_%s' % (dataset, learner_type, score, date)
+    filename = 'learning_%s_%s_%.3f_%s_%s' % (dataset, learner_type, score, date,extras)
     path = Path(results_dir + filename + '.pkl')
     joblib.dump(learning_result, path)
 
@@ -61,6 +61,10 @@ def load_best_learning(dataset, estimator_type, results_dir='./results/'):
     print('Found the following results files for this dataset/algorithm: %s' % results_files)
     print('Returning results for the highest-scoring-file: %s' % best_results_file)
     return joblib.load(results_dir + best_results_file)
+
+
+def load_result_by_name(filename, results_dir='./results/'):
+    return joblib.load(results_dir + filename)
 
 
 def scikit_cv_result_to_df(cv_res, drop_splits=True):
@@ -116,3 +120,12 @@ def timing_curve(clf, X, Y, train_sizes=np.linspace(0.1, 0.9, 9)):
     out_df['pred_time_per_samp'] = out_df['pred_time'] / out_df['train_size']
     out_df = out_df.set_index('train_size')
     return out_df
+
+
+def save_timing_curve(timing_df, dataset, estimator_type, results_dir='./results/', extras=''):
+    """Saves a GridSearchCV or RandomizedSearchCV result to a file"""
+    tz = timezone('US/Eastern')
+    date = datetime.now(tz).isoformat(timespec='minutes', sep='_').replace(':', '-')
+    filename = 'timing_%s_%s_%s_%s' % (dataset, estimator_type, date, extras)
+    path = Path(results_dir + filename + '.pkl')
+    joblib.dump(timing_df, path)
