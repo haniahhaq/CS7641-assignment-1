@@ -13,7 +13,7 @@ from sklearn.model_selection import learning_curve, validation_curve
 from helpers import timing_curve
 
 
-def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlabel=None, legend=True, linestyles=None, title=None, ylim=None, legend_kwargs={}, fig_kwargs={}, markersize=None):
+def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlabel=None, legend=True, linestyles=None, title=None, ylim=None, logx=False, legend_kwargs={}, fig_kwargs={}, markersize=None):
     """Generic plot routine to plot multiple lines on same axes"""
 
     fig, ax = plt.subplots(**fig_kwargs)
@@ -38,6 +38,8 @@ def plot_means_w_stds(means, stds, xrange, series_labels=None, ylabel=None, xlab
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.ylim(ylim)
+    if logx:
+        plt.semilogx()
     if legend:
         plt.legend(**legend_kwargs)
     if title:
